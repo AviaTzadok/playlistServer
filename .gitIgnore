@@ -1,0 +1,4 @@
+.env
+node_modules
+secret.js
+API_KEY.js
