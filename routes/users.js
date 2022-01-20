@@ -7,13 +7,23 @@ const User = require("../models/User");
 router.post("/register", async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const user = new User({
+    const userAlreadyExist = await User.findOne({
+      username: req.body.username,
+    });
+
+    if (userAlreadyExist) return res.status(401).send("already Exist");
+    const user = await new User({
       username: req.body.username,
       password: hashedPassword,
-    });
-    const savedUser = await user.save();
+    }).save();
+
+    const accessToken = jwt.sign(
+      JSON.stringify(user),
+      process.env.TOKEN_SECRET
+    );
+    user.password = undefined;
     console.log("New user saved successfully");
-    res.status(200).json({ message: "Welcome" });
+    res.json({ accessToken: accessToken, status: "200" });
   } catch (e) {
     console.log(e);
     res.status(500).json({ message: "internal server error" });
@@ -32,7 +42,8 @@ router.post("/login", async (req, res) => {
         JSON.stringify(user),
         process.env.TOKEN_SECRET
       );
-      res.status(200).json({ message: "Entry approved" });
+      user.password = undefined;
+      res.json({ accessToken: accessToken, status: "200" });
     } else {
       res.status(400).json({ message: "Invalid credentials" });
     }

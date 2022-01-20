@@ -5,9 +5,10 @@ const songSchema = new mongoose.Schema({
   image: { type: String, required: true },
   user: { type: String, required: false },
   // createdBy: {
-  //   type: mongoose.SchemaTypes.ObjectId,
+  //   // type: mongoose.SchemaTypes.ObjectId,
+  //   type: String,
   //   ref: "User",
-  //   // required: true,
+  //   required: true,
   // },
   provider: { type: String },
 });
