@@ -8,7 +8,7 @@ const axiosInstance = axios.create({
   baseURL: "https://www.googleapis.com/youtube/v3",
   params: {
     part: "snippet",
-    maxResults: 1,
+    maxResults: 2,
     key: key,
   },
   headers: {},

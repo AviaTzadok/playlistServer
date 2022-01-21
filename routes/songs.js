@@ -36,19 +36,15 @@ router.post("/", authJWT, async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
-  let songsList = await Song.find({});
+router.get("/", authJWT, async (req, res) => {
+  let songsList = await Song.find({ user: { $ne: req.body.user } });
+
+  // let songsList = await Song.find({});
+  console.log(songsList);
   res.send(songsList);
 });
 
-router.get("/", async (req, res) => {
-  let songsList = await Song.find({
-    user: req.headers.authorization.split(" ")[1],
-  });
-  res.send(songsList);
-});
-
-router.get("/:allPlaylist", authJWT, async (req, res) => {
+router.get("/:myPlaylist", authJWT, async (req, res) => {
   let songsList = await Song.find({ user: req.body.user });
   res.send(songsList);
 });
