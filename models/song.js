@@ -3,7 +3,8 @@ const songSchema = new mongoose.Schema({
   id: { type: String, required: true },
   title: { type: String, required: true },
   image: { type: String, required: true },
-  user: { type: String, required: false },
+  user: { type: String, required: true },
+  playlist: { type: String, required: false },
   // createdBy: {
   //   // type: mongoose.SchemaTypes.ObjectId,
   //   type: String,
