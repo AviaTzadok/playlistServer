@@ -27,4 +27,5 @@ connectDB().then(() => {
 //Use routes
 app.use("/songs", songsRoute);
 app.use("/users", usersRoute);
+// app.use("/playlist", playlistRoute);
 app.use("/search", searchRoute);
