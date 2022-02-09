@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Song = require("../models/song");
+const Playlist = require("../models/Playlist");
 const jwt = require("jsonwebtoken");
 
 const authJWT = (req, res, next) => {
@@ -23,16 +24,38 @@ const authJWT = (req, res, next) => {
 };
 
 router.post("/", authJWT, async (req, res) => {
+  // let song = await Song.findOne({
+  //   id: req.body.id,
+  //   user: req.body.user,
+  // });
+
   let song = await Song.findOne({
     id: req.body.id,
-    user: req.body.user,
   });
   if (!song) {
+    //במקרה שהשיר לא קיים במערכת
     let newSong = await new Song({ ...req.body }).save();
     console.log(newSong);
+    const updatePlaylist = await Playlist.findOneAndUpdate(
+      { _id: req.body.playlist.id }, //id מונגואי של אותו פליליסט
+      { user: req.body.user },
+      { $push: { songs: newSong._id.updated } },
+      { returnNewDocument: true }
+    );
+    console.log(updatePlaylist);
+    res.send(updatePlaylist);
     res.send(newSong);
   } else {
-    res.send(false);
+    //במקרה שהשיר קיים במערכת
+    //צריך לעשות בדיקה אם השיר לא קיים כבר בפליליסט
+    const updatePlaylist = await Playlist.findOneAndUpdate(
+      { _id: req.body.playlist.id }, //id מונגואי של אותו פליליסט
+      { user: req.body.user },
+      { $push: { songs: song._id.updated } },
+      { returnNewDocument: true }
+    );
+    console.log(updatePlaylist);
+    res.send(updatePlaylist);
   }
 });
 
