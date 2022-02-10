@@ -5,7 +5,12 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const { connectDB } = require("./models/modelsIndex.js");
-const { songsRoute, usersRoute, searchRoute } = require("./routes/router.js");
+const {
+  songsRoute,
+  usersRoute,
+  playlistRoute,
+  searchRoute,
+} = require("./routes/router.js");
 
 //Uses
 const app = express();
@@ -27,5 +32,5 @@ connectDB().then(() => {
 //Use routes
 app.use("/songs", songsRoute);
 app.use("/users", usersRoute);
-// app.use("/playlist", playlistRoute);
+app.use("/playlist", playlistRoute);
 app.use("/search", searchRoute);

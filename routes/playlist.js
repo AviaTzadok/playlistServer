@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Playlist = require("../models/Playlist");
+
 const jwt = require("jsonwebtoken");
 
 const authJWT = (req, res, next) => {
-  console.log("111111111111111111111");
-  console.log(req.headers.authorization);
   const authHeader = req.headers.authorization;
   if (authHeader) {
     const token = authHeader.split(" ")[1];
@@ -14,7 +13,6 @@ const authJWT = (req, res, next) => {
         return res.sendStatus(403);
       }
       req.body.user = user._id;
-
       next();
     });
   } else {
@@ -22,26 +20,41 @@ const authJWT = (req, res, next) => {
   }
 };
 
-router.post("/", async (req, res) => {
+router.get("/allPlaylistImg", authJWT, async (req, res) => {
+  try {
+    const playlists = await Playlist.find({
+      user: req.body.user,
+    });
+    console.log(playlists);
+    res.send(playlists);
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ massage: "internal server error" });
+  }
+});
+
+router.post("/playlist", authJWT, async (req, res) => {
   const playlist = await new Playlist({
     PlaylistName: req.body.name,
-    user: req.body.id, // צריך להוסיף, לא תקיןid מונגואי של מי שיצר את הפליליסט,
+    playlistImag: "",
+    user: req.body.user,
     songs: [],
   }).save();
-  res.send(playlist);
+  res.send(JSON.stringify(playlist));
 });
-router.get("/playlist/:playlist", async (req, res) => {
+
+router.get("/playlist/:id", authJWT, async (req, res) => {
   try {
-    const platlistName = req.params.playlist;
-    const user = req.body.createdBy;
+    const playlistId = await req.params.id;
+    console.log(playlistId);
     const playlist = await Playlist.findOne({
-      PlaylistName: platlistName,
-      user: user,
+      _id: playlistId,
     }).populate("songs");
+    console.log(playlist.songs);
     res.send(playlist.songs);
   } catch (e) {
     console.log(e);
-    res.status(500).json({ massege: "internal server error" });
+    res.status(500).json({ massage: "internal server error" });
   }
 });
 

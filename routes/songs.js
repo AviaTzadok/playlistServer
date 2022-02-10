@@ -5,7 +5,7 @@ const Playlist = require("../models/Playlist");
 const jwt = require("jsonwebtoken");
 
 const authJWT = (req, res, next) => {
-  console.log("111111111111111111111");
+  console.log("555555555555555555555555555555555555555");
   console.log(req.headers.authorization);
   const authHeader = req.headers.authorization;
   if (authHeader) {
@@ -15,7 +15,7 @@ const authJWT = (req, res, next) => {
         return res.sendStatus(403);
       }
       req.body.user = user._id;
-
+      console.log(req.body.user);
       next();
     });
   } else {
@@ -24,38 +24,45 @@ const authJWT = (req, res, next) => {
 };
 
 router.post("/", authJWT, async (req, res) => {
-  // let song = await Song.findOne({
-  //   id: req.body.id,
-  //   user: req.body.user,
-  // });
-
   let song = await Song.findOne({
-    id: req.body.id,
+    id: req.body.name.id,
   });
   if (!song) {
     //במקרה שהשיר לא קיים במערכת
-    let newSong = await new Song({ ...req.body }).save();
-    console.log(newSong);
+
+    let newSong = await new Song({
+      id: req.body.name.id,
+      title: req.body.name.title,
+      image: req.body.name.image,
+    }).save();
+    let idSong = await Song.findOne({ id: req.body.name.id });
+
     const updatePlaylist = await Playlist.findOneAndUpdate(
-      { _id: req.body.playlist.id }, //id מונגואי של אותו פליליסט
-      { user: req.body.user },
-      { $push: { songs: newSong._id.updated } },
-      { returnNewDocument: true }
-    );
-    console.log(updatePlaylist);
-    res.send(updatePlaylist);
-    res.send(newSong);
+      {
+        _id: req.body.playlistID,
+        user: req.body.user,
+      },
+      { $push: { songs: idSong._id } },
+      {
+        new: true,
+      }
+    ).populate("songs");
+    res.send(idSong);
   } else {
     //במקרה שהשיר קיים במערכת
     //צריך לעשות בדיקה אם השיר לא קיים כבר בפליליסט
+    let idSong = await Song.findOne({ id: req.body.name.id });
     const updatePlaylist = await Playlist.findOneAndUpdate(
-      { _id: req.body.playlist.id }, //id מונגואי של אותו פליליסט
-      { user: req.body.user },
-      { $push: { songs: song._id.updated } },
-      { returnNewDocument: true }
-    );
-    console.log(updatePlaylist);
-    res.send(updatePlaylist);
+      {
+        _id: req.body.playlistID,
+        user: req.body.user,
+      },
+      { $push: { songs: idSong._id } },
+      {
+        new: true,
+      }
+    ).populate("songs");
+    res.send(idSong);
   }
 });
 
@@ -79,6 +86,10 @@ router.delete("/", authJWT, async (req, res) => {
   });
   console.log("song", song);
   if (song) {
+    // const deletedSongFromPlaylist=await Playlist.deleteOne({
+    //   id: req.body,
+    //   user: req.body.user,
+    // });
     const deletedSong = await Song.deleteOne({
       id: req.body,
       user: req.body.user,
