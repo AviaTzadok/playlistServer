@@ -25,7 +25,7 @@ router.get("/allPlaylistImg", authJWT, async (req, res) => {
     const playlists = await Playlist.find({
       user: req.body.user,
     });
-    console.log(playlists);
+
     res.send(playlists);
   } catch (e) {
     console.log(e);
@@ -46,15 +46,27 @@ router.post("/playlist", authJWT, async (req, res) => {
 router.get("/playlist/:id", authJWT, async (req, res) => {
   try {
     const playlistId = await req.params.id;
-    console.log(playlistId);
     const playlist = await Playlist.findOne({
       _id: playlistId,
     }).populate("songs");
-    console.log(playlist.songs);
-    res.send(playlist.songs);
+
+    res.send(playlist.songs.reverse());
   } catch (e) {
     console.log(e);
     res.status(500).json({ massage: "internal server error" });
+  }
+});
+
+router.get("/AllPlaylists", authJWT, async (req, res) => {
+  console.log("22222222222222222222222222222");
+  try {
+    const playlist = await Playlist.find({ user: { $ne: req.body.user } });
+    res.send(playlist);
+  } catch (e) {
+    console.log(e);
+    res
+      .status(500)
+      .json({ massage: "internal server error 11111111111111111111111111" });
   }
 });
 

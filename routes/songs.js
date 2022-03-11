@@ -24,81 +24,150 @@ const authJWT = (req, res, next) => {
 };
 
 router.post("/", authJWT, async (req, res) => {
-  let song = await Song.findOne({
-    id: req.body.name.id,
-  });
-  if (!song) {
-    //במקרה שהשיר לא קיים במערכת
-
-    let newSong = await new Song({
+  try {
+    let song = await Song.findOne({
       id: req.body.name.id,
-      title: req.body.name.title,
-      image: req.body.name.image,
-    }).save();
-    let idSong = await Song.findOne({ id: req.body.name.id });
+    });
+    if (!song) {
+      //במקרה שהשיר לא קיים במערכת
 
-    const updatePlaylist = await Playlist.findOneAndUpdate(
-      {
+      let newSong = await new Song({
+        id: req.body.name.id,
+        title: req.body.name.title,
+        image: req.body.name.image,
+      }).save();
+      let idSong = await Song.findOne({ id: req.body.name.id });
+
+      //****************************************************************************** */
+
+      let arrSongs = await Playlist.findOne({ _id: req.body.playlistID });
+      if (arrSongs.songs.length == 0) {
+        const updatePlaylistImag = await Playlist.findOneAndUpdate(
+          {
+            _id: req.body.playlistID,
+            user: req.body.user,
+          },
+          { $set: { playlistImag: req.body.name.image } },
+          {
+            new: true,
+          }
+        );
+      }
+
+      //************************************************************************ */
+
+      const updatePlaylist = await Playlist.findOneAndUpdate(
+        {
+          _id: req.body.playlistID,
+          user: req.body.user,
+        },
+        { $push: { songs: idSong._id } },
+        {
+          new: true,
+        }
+      ).populate("songs");
+
+      res.send(idSong);
+    } else {
+      //****************************************************************************** */
+
+      let arrSongs = await Playlist.findOne({ _id: req.body.playlistID });
+      if (arrSongs.songs.length == 0) {
+        const updatePlaylistImag = await Playlist.findOneAndUpdate(
+          {
+            _id: req.body.playlistID,
+            user: req.body.user,
+          },
+          { $set: { playlistImag: req.body.name.image } },
+          {
+            new: true,
+          }
+        );
+      }
+
+      //************************************************************************ */
+
+      //במקרה שהשיר קיים במערכת
+      //צריך לעשות בדיקה אם השיר לא קיים כבר בפליליסט
+      let idSong = await Song.findOne({ id: req.body.name.id });
+      let ifExists = await Playlist.findOne({
         _id: req.body.playlistID,
         user: req.body.user,
-      },
-      { $push: { songs: idSong._id } },
-      {
-        new: true,
+        songs: idSong,
+      });
+      if (!ifExists) {
+        const updatePlaylist = await Playlist.findOneAndUpdate(
+          {
+            _id: req.body.playlistID,
+            user: req.body.user,
+          },
+          { $push: { songs: idSong._id } },
+          {
+            new: true,
+          }
+        ).populate("songs");
+        res.send(idSong);
+      } else {
+        console.log("already exists");
       }
-    ).populate("songs");
-    res.send(idSong);
-  } else {
-    //במקרה שהשיר קיים במערכת
-    //צריך לעשות בדיקה אם השיר לא קיים כבר בפליליסט
-    let idSong = await Song.findOne({ id: req.body.name.id });
-    const updatePlaylist = await Playlist.findOneAndUpdate(
-      {
-        _id: req.body.playlistID,
-        user: req.body.user,
-      },
-      { $push: { songs: idSong._id } },
-      {
-        new: true,
-      }
-    ).populate("songs");
-    res.send(idSong);
+    }
+  } catch (err) {
+    res.send(err);
   }
 });
 
-router.get("/", authJWT, async (req, res) => {
-  let songsList = await Song.find({ user: { $ne: req.body.user } });
-
-  // let songsList = await Song.find({});
-  console.log(songsList);
-  res.send(songsList);
-});
-
 router.get("/:myPlaylist", authJWT, async (req, res) => {
-  let songsList = await Song.find({ user: req.body.user });
-  res.send(songsList);
+  try {
+    console.log(req.params.myPlaylist);
+    const playlist = await Playlist.findOne({
+      id: req.params.myPlaylist,
+      user: req.body.user,
+    }).populate("songs");
+
+    if (playlist) {
+      res.send(playlist.songs);
+    } else {
+      res.send([]);
+    }
+  } catch (err) {
+    res.send(err);
+  }
 });
 
 router.delete("/", authJWT, async (req, res) => {
-  let song = await Song.findOne({
-    id: req.body,
-    user: req.body.user,
-  });
-  console.log("song", song);
-  if (song) {
-    // const deletedSongFromPlaylist=await Playlist.deleteOne({
-    //   id: req.body,
-    //   user: req.body.user,
-    // });
-    const deletedSong = await Song.deleteOne({
-      id: req.body,
+  try {
+    let obj = JSON.stringify(req.body);
+    obj = JSON.parse(obj);
+
+    const playlists = await Playlist.findOne({
       user: req.body.user,
-    });
-    let songsList = await Song.find({ user: req.body.user });
-    console.log({ message: "OK", deletedSong });
-    res.send(songsList);
-  } else {
-    return res.status(401).send(false);
+      _id: obj.playlistID,
+    }).select("songs");
+
+    const index = playlists.songs.indexOf(obj.id);
+    if (index > -1) {
+      playlists.songs.splice(index, 1); // 2nd parameter means remove one item only
+    }
+    console.log(playlists.songs);
+
+    const newPlaylists = await Playlist.findByIdAndUpdate(
+      obj.playlistID,
+      { songs: playlists.songs },
+      {
+        new: true,
+      }
+    );
+
+    console.log(playlists);
+
+    console.log(obj.id);
+
+    const sendPlaylists = await Playlist.findOne({
+      _id: obj.playlistID,
+    }).populate("songs");
+    res.send(sendPlaylists.songs);
+  } catch (err) {
+    res.send(err);
   }
 });
 
