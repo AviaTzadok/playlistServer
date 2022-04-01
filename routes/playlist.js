@@ -28,7 +28,6 @@ router.get("/allPlaylistImg", authJWT, async (req, res) => {
 
     res.send(playlists);
   } catch (e) {
-    console.log(e);
     res.status(500).json({ massage: "internal server error" });
   }
 });
@@ -52,21 +51,16 @@ router.get("/playlist/:id", authJWT, async (req, res) => {
 
     res.send(playlist.songs.reverse());
   } catch (e) {
-    console.log(e);
     res.status(500).json({ massage: "internal server error" });
   }
 });
 
 router.get("/AllPlaylists", authJWT, async (req, res) => {
-  console.log("22222222222222222222222222222");
   try {
     const playlist = await Playlist.find({ user: { $ne: req.body.user } });
     res.send(playlist);
   } catch (e) {
-    console.log(e);
-    res
-      .status(500)
-      .json({ massage: "internal server error 11111111111111111111111111" });
+    res.status(500).json({ massage: "internal server error " });
   }
 });
 

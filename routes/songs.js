@@ -5,8 +5,6 @@ const Playlist = require("../models/Playlist");
 const jwt = require("jsonwebtoken");
 
 const authJWT = (req, res, next) => {
-  console.log("555555555555555555555555555555555555555");
-  console.log(req.headers.authorization);
   const authHeader = req.headers.authorization;
   if (authHeader) {
     const token = authHeader.split(" ")[1];
@@ -15,7 +13,6 @@ const authJWT = (req, res, next) => {
         return res.sendStatus(403);
       }
       req.body.user = user._id;
-      console.log(req.body.user);
       next();
     });
   } else {
@@ -29,8 +26,6 @@ router.post("/", authJWT, async (req, res) => {
       id: req.body.name.id,
     });
     if (!song) {
-      //במקרה שהשיר לא קיים במערכת
-
       let newSong = await new Song({
         id: req.body.name.id,
         title: req.body.name.title,
@@ -87,8 +82,6 @@ router.post("/", authJWT, async (req, res) => {
 
       //************************************************************************ */
 
-      //במקרה שהשיר קיים במערכת
-      //צריך לעשות בדיקה אם השיר לא קיים כבר בפליליסט
       let idSong = await Song.findOne({ id: req.body.name.id });
       let ifExists = await Playlist.findOne({
         _id: req.body.playlistID,
@@ -108,7 +101,6 @@ router.post("/", authJWT, async (req, res) => {
         ).populate("songs");
         res.send(idSong);
       } else {
-        console.log("already exists");
       }
     }
   } catch (err) {
@@ -118,7 +110,6 @@ router.post("/", authJWT, async (req, res) => {
 
 router.get("/:myPlaylist", authJWT, async (req, res) => {
   try {
-    console.log(req.params.myPlaylist);
     const playlist = await Playlist.findOne({
       id: req.params.myPlaylist,
       user: req.body.user,
@@ -148,7 +139,6 @@ router.delete("/", authJWT, async (req, res) => {
     if (index > -1) {
       playlists.songs.splice(index, 1); // 2nd parameter means remove one item only
     }
-    console.log(playlists.songs);
 
     const newPlaylists = await Playlist.findByIdAndUpdate(
       obj.playlistID,
@@ -157,10 +147,6 @@ router.delete("/", authJWT, async (req, res) => {
         new: true,
       }
     );
-
-    console.log(playlists);
-
-    console.log(obj.id);
 
     const sendPlaylists = await Playlist.findOne({
       _id: obj.playlistID,
