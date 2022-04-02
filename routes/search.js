@@ -15,12 +15,16 @@ const axiosInstance = axios.create({
 });
 
 router.get("/:songToSearch", async (req, res) => {
-  const response = await axiosInstance.get("/search", {
-    params: {
-      q: req.params.songToSearch,
-    },
-  });
-  res.send(response.data);
+  try {
+    const response = await axiosInstance.get("/search", {
+      params: {
+        q: req.params.songToSearch,
+      },
+    });
+    res.send(response.data);
+  } catch (e) {
+    res.status(500).json({ message: "internal server error" });
+  }
 });
 
 module.exports = router;

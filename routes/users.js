@@ -50,7 +50,11 @@ router.post("/login", async (req, res) => {
 });
 
 router.get("/", async (req, res) => {
-  let users = await User.find({});
-  res.send(users);
+  try {
+    let users = await User.find({});
+    res.send(users);
+  } catch (e) {
+    res.status(500).json({ message: "internal server error" });
+  }
 });
 module.exports = router;

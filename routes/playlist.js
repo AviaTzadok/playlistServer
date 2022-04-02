@@ -33,13 +33,17 @@ router.get("/allPlaylistImg", authJWT, async (req, res) => {
 });
 
 router.post("/playlist", authJWT, async (req, res) => {
-  const playlist = await new Playlist({
-    PlaylistName: req.body.name,
-    playlistImag: "",
-    user: req.body.user,
-    songs: [],
-  }).save();
-  res.send(JSON.stringify(playlist));
+  try {
+    const playlist = await new Playlist({
+      PlaylistName: req.body.name,
+      playlistImag: "",
+      user: req.body.user,
+      songs: [],
+    }).save();
+    res.send(JSON.stringify(playlist));
+  } catch (e) {
+    res.status(500).json({ massage: "internal server error" });
+  }
 });
 
 router.get("/playlist/:id", authJWT, async (req, res) => {
